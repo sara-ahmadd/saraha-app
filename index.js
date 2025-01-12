@@ -11,7 +11,9 @@ const app = express();
 await dbConnection();
 
 app.use(express.json());
-
+app.get("/", (req, res) => {
+  res.send("Hello, World! from saraha app :) sara ahmad");
+});
 app.use("/auth", authController);
 app.use("/user", userController);
 app.use("/message", messageController);
