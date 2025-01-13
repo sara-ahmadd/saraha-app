@@ -69,6 +69,9 @@ export const verifyEmailService = async (req, res, next) => {
   const user = await UserModel.findById(_id);
 
   if (!user) return next(new Error("user is not found"));
+  //check if there is another user having the same email or not
+  const checkEmail = await UserModel.find({ email });
+  if (checkEmail) return next(new Error("User with this email already exists"));
   user.email = email;
   await user.save();
   return res
