@@ -8,6 +8,7 @@ import {
   loginService,
   resetPasswordService,
   signUpService,
+  verifyEmailWithOtp,
 } from "./auth.service.js";
 import jwt from "jsonwebtoken";
 import { asyncHandler } from "../../utils/asyncHandler.js";
@@ -18,6 +19,7 @@ import {
   loginSchema,
   resetPasswordSchema,
   signupSchema,
+  verifyEmailSchema,
 } from "./auth.validate.js";
 import { isAuthenticated } from "../../middlewares/authenticate.middleare.js";
 
@@ -29,6 +31,12 @@ router.post("/signup", validate(signupSchema), asyncHandler(signUpService));
 //login
 router.post("/login", validate(loginSchema), asyncHandler(loginService));
 
+//activate account using otp
+router.post(
+  "/verify-email",
+  validate(verifyEmailSchema),
+  asyncHandler(verifyEmailWithOtp)
+);
 //activate account
 router.get(
   "/activate/:token",

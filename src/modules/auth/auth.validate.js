@@ -65,10 +65,25 @@ export const loginSchema = joi
 
 export const activationSchema = joi
   .object({
-    token: joi.string().required().messages({
+    email: joi.string().required().email().messages({
+      "string.base": "Email must be a string.",
+      "string.empty": "Email is required.",
+      "string.email": "Please provide a valid email address.",
+      "any.required": "Email is required.",
+    }),
+  })
+  .required();
+export const verifyEmailSchema = joi
+  .object({
+    email: joi.string().required().messages({
       "string.base": "Token must be a string.",
       "string.empty": "Token is required.",
       "any.required": "Token is required.",
+    }),
+    otp: joi.string().required().messages({
+      "string.base": "otp must be a string.",
+      "string.empty": "otp is required.",
+      "any.required": "otp is required.",
     }),
   })
   .required();

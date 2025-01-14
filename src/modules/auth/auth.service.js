@@ -9,6 +9,8 @@ import { eventEmitter } from "../../utils/email/sendEmail.event.js";
 import { verificationTemplate } from "../../utils/email/verificationTemplate.js";
 import { sendEmail } from "../../utils/email/sendEmail.listener.js";
 import { resetPasswordTemplate } from "../../utils/email/resetPasswordTemplate.js";
+import { sendOtp } from "../../utils/email/sendOtp.js";
+import { OtpModel } from "../../DB/models/otp.model.js";
 
 export const getUserByEmail = async (email) => {
   const user = await UserModel.findOne({ email });
@@ -18,8 +20,7 @@ export const getUserByEmail = async (email) => {
 };
 
 export const signUpService = async (req, res, next) => {
-  const { userName, email, phone, password, confirmPassword, gender } =
-    req.body;
+  const { email, phone, password } = req.body;
 
   //check user is not registered already
   const user = await UserModel.findOne({ email });
@@ -37,6 +38,7 @@ export const signUpService = async (req, res, next) => {
       const activationToken = jwt.sign({ email }, process.env.JWT_SECRET_KEY, {
         expiresIn: "12h",
       });
+
       //emit sendEmail event so that the listener function (sendEmail) fires
       eventEmitter.emit(
         "sendEmail",
@@ -60,6 +62,7 @@ export const signUpService = async (req, res, next) => {
   const activationToken = jwt.sign({ email }, process.env.JWT_SECRET_KEY, {
     expiresIn: "12h",
   });
+
   //emit sendEmail event so that the listener function (sendEmail) fires
   eventEmitter.emit("sendEmail", email, verificationTemplate(activationToken));
   //add to users collection
@@ -69,6 +72,8 @@ export const signUpService = async (req, res, next) => {
     phone: encryptedPhone,
   });
 
+  //send otp to user's email to verify his email
+  sendOtp(email);
   return res.status(201).json({
     status: "Success",
     message: "User is created successfully",
@@ -158,4 +163,22 @@ export const resetPasswordService = async (req, res, next) => {
     status: "Success",
     message: "Password is reset successfully",
   });
+};
+
+export const verifyEmailWithOtp = async (req, res, next) => {
+  //check if the otp exists in the database
+  const otp = await OtpModel.findOne({ otp: req.body.otp }).lean();
+  if (!otp) return next(new Error("otp is required"));
+
+  //check if otp belongs to the email
+  const otpEmail = otp.email;
+  if (otpEmail !== req.body.email)
+    return next(new Error("otp doesnot belong to this email"));
+  const user = await getUserByEmail(req.body.email);
+  //change isActivated value of that user to true
+  user.isActivated = true;
+  await user.save();
+  return res
+    .status(200)
+    .json({ status: "success", message: "Email is verified successfully" });
 };
